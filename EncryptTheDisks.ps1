@@ -28,36 +28,51 @@
 #>
 [CmdletBinding()]
 param (
-    [Parameter()]
+    [Parameter(Mandatory=$True)]
     [String]
     $SubscriptionID,
-    [Parameter()]
+    [Parameter(Mandatory=$True)]
     [String]
     $ResourceGroup,   
-    [Parameter()]
+    [Parameter(Mandatory=$True)]
     [String]
     $vmName,  
-    [Parameter()]
+    [Parameter(Mandatory=$True)]
     [String]
     $DiskEncryptionSetName, 
-    [Parameter()]
+    [Parameter(Mandatory=$True)]
     [String]
     $KeyVaultName, 
-    [Parameter()]
+    [Parameter(Mandatory=$True)]
     [String]
     $KeyName
 )
 
 Connect-AzAccount
 
-$context = Get-AzSubscription -SubscriptionId $SubscriptionID 
-Set-AzContext $context
+$context = Get-AzSubscription -SubscriptionId $SubscriptionID -ErrorAction Stop -ErrorVariable $SubscriptionIDError
+If ($SubscriptionIDError) {
 
+  Write-Host "Get Subscription Error " $KeyVaultError
+
+}
+Set-AzContext $context -ErrorAction Stop -ErrorVariable $contextError
+If ($contextError) {
+
+  Write-Host "Set Context Error " $KeyVaultError
+
+}
 $location = "westeurope"
 
 #------------------- Phase 2: Get KeyVault and the Key, Create Disk Encryption Set and  ----------------------------------------------
 #Get the Key Vault
-$KeyVault=Get-AzKeyVault -VaultName $KeyVaultName 
+$KeyVault=Get-AzKeyVault -VaultName $KeyVaultName -ErrorAction Stop -ErrorVariable $KeyVaultError
+
+If ($KeyVaultError) {
+
+  Write-Host "KeyVault Error " $KeyVaultError
+
+}
 
 #Get the key for disk encryption
 $key=Get-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName
