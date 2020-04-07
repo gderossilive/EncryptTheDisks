@@ -50,26 +50,17 @@ param (
 
 Connect-AzAccount
 
-$context = Get-AzSubscription -SubscriptionId $SubscriptionID # 594cafab-484b-40b0-8336-f0a6042a8754
+$context = Get-AzSubscription -SubscriptionId $SubscriptionID 
 Set-AzContext $context
 
-$seed=(Get-Random)
-
-# Variables for common values
-#$resourceGroup = "PCLRG$seed"
 $location = "westeurope"
-#$vmName = "PCLVM$seed"
-#$DiskEncryptionSetName="PCLDiskEncryptionSet$seed"
-#$KeyVaultName="PCLKeyVault$seed"
-#$KeyName="Key$seed"
-#$ServicePrincipalName="PCLSP$seed"
 
 #------------------- Phase 2: Get KeyVault and the Key, Create Disk Encryption Set and  ----------------------------------------------
-#Create a New Key Vault
-$KeyVault=New-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGroup -Location $location -EnableSoftDelete -EnablePurgeProtection
+#Get the Key Vault
+$KeyVault=Get-AzKeyVault -VaultName $KeyVaultName 
 
-#Create a new key for disk encryption
-$key=Add-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -Destination 'Software'
+#Get the key for disk encryption
+$key=Get-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName
 
 #Create a new DiskEcnryptionSet
 $config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned'

@@ -55,11 +55,6 @@ $nic = New-AzNetworkInterface -Name myNic -ResourceGroupName $resourceGroup -Loc
   -SubnetId $vnet.Subnets[0].Id -PublicIpAddressId $pip.Id
 
 # Create a virtual machine configuration
-#$vmConfig = New-AzVMConfig -VMName $vmName -VMSize Standard_B8ms | `
-#    Set-AzVMOperatingSystem -Windows -ComputerName $vmName -Credential $cred | `
-#    Set-AzVMSourceImage -PublisherName MicrosoftWindowsServer -Offer WindowsServer `
-#    -Skus 2016-Datacenter -Version latest | Add-AzVMNetworkInterface -Id $nic.Id
-
 $vmConfig = New-AzVMConfig -VMName $vmName -VMSize Standard_B8ms
 $OsDisk=Set-AzVMOperatingSystem -VM $vmconfig -Windows -ComputerName $vmName -Credential $cred -
 $n=Get-Random -Maximum 5
@@ -69,8 +64,6 @@ do{
     #$i
     $i++
 } While ($n -gt $i)
-
-
 $VmSourceImage=Set-AzVMSourceImage -VM $vmConfig -PublisherName MicrosoftWindowsServer -Offer WindowsServer `
     -Skus 2016-Datacenter -Version latest | Add-AzVMNetworkInterface -Id $nic.Id
 
