@@ -1,6 +1,26 @@
+<#
+ .SYNOPSIS
+ EncryptTheDisks
+
+ .DESCRIPTION
+ EncryptTheDisks
+
+ .PARAMETER SubscriptionID
+ SubscriptionID
+
+.EXAMPLE
+ C:\PS> CreateDummyVM -SubscriptionID "11111111-2222-3333-4444-555555555555"
+#>
+[CmdletBinding()]
+param ( 
+    [Parameter()]
+    [String]
+    $SubscriptionID
+)
+
 Connect-AzAccount
 
-$context = Get-AzSubscription -SubscriptionId 594cafab-484b-40b0-8336-f0a6042a8754
+$context = Get-AzSubscription -SubscriptionId $SubscriptionID
 Set-AzContext $context
 
 $seed=(Get-Random)
@@ -40,7 +60,7 @@ $nic = New-AzNetworkInterface -Name myNic -ResourceGroupName $resourceGroup -Loc
 #    Set-AzVMSourceImage -PublisherName MicrosoftWindowsServer -Offer WindowsServer `
 #    -Skus 2016-Datacenter -Version latest | Add-AzVMNetworkInterface -Id $nic.Id
 
-$vmConfig = New-AzVMConfig -VMName $vmName -VMSize Standard_DS14_v2 #Standard_B8ms
+$vmConfig = New-AzVMConfig -VMName $vmName -VMSize Standard_B8ms
 $OsDisk=Set-AzVMOperatingSystem -VM $vmconfig -Windows -ComputerName $vmName -Credential $cred -
 $n=Get-Random -Maximum 5
 $i=0
@@ -67,6 +87,6 @@ $KeyVault=New-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGr
 #Create a new key for disk encryption
 $key=Add-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -Destination 'Software'
 
-Write-Host"Type EncryptTheDisks -SubscriptionID $SubscriptionID -ResourceGroup $resourcegroup -vmName $vmName -DiskEncryptionSetName $DiskEncryptionSetName -KeyVaultName $KeyVaultName -KeyName $KeyName"
+Write-Host "Type EncryptTheDisks -SubscriptionID $SubscriptionID -ResourceGroup $resourcegroup -vmName $vmName -DiskEncryptionSetName $DiskEncryptionSetName -KeyVaultName $KeyVaultName -KeyName $KeyName"
 
 
