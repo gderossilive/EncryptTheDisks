@@ -48,59 +48,76 @@ param (
     $KeyName
 )
 
-Connect-AzAccount
-
-$context = Get-AzSubscription -SubscriptionId $SubscriptionID -ErrorAction Stop -ErrorVariable $SubscriptionIDError
-If ($SubscriptionIDError) {
-
-  Write-Host "Get Subscription Error " $KeyVaultError
-
-}
-Set-AzContext $context -ErrorAction Stop -ErrorVariable $contextError
-If ($contextError) {
-
-  Write-Host "Set Context Error " $KeyVaultError
-
-}
 $location = "westeurope"
 
-#------------------- Phase 2: Get KeyVault and the Key, Create Disk Encryption Set and  ----------------------------------------------
-#Get the Key Vault
-$KeyVault=Get-AzKeyVault -VaultName $KeyVaultName -ErrorAction Stop -ErrorVariable $KeyVaultError
-
-If ($KeyVaultError) {
-
-  Write-Host "KeyVault Error " $KeyVaultError
-
+Try
+{
+    Connect-AzAccount
+    $context = Get-AzSubscription -SubscriptionId $SubscriptionID -ErrorAction Stop
+    Set-AzContext $context -ErrorAction Stop 
+}
+Catch
+{
+    $ErrorMessage = $_.Exception.Message
+    $FailedItem = $_.Exception.ItemName
+    Write-Host "Error. Please review your inputs"
+    Write-Host "Error details: $ErrorMessage"
+    Break
 }
 
-#Get the key for disk encryption
-$key=Get-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName
-
-#Create a new DiskEcnryptionSet
-$config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned'
-$diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -DiskEncryptionSet $config;
-
-#Give access to the Azure Key Vault
-Set-AzKeyVaultAccessPolicy -VaultName $keyVaultName -ObjectId $diskEncryptionSet.Identity.PrincipalId -PermissionsToKeys wrapkey,unwrapkey,get
-New-AzRoleAssignment -ResourceName $keyVaultName -ResourceGroupName $ResourceGroup -ResourceType "Microsoft.KeyVault/vaults" -ObjectId $diskEncryptionSet.Identity.PrincipalId -RoleDefinitionName "Reader"
-
-#---------------- Phase 3: Disk Encryption ----------------------------------------------------------------------------------------------------------------------
-
-# Stop the VM
-Stop-AzVM -ResourceGroupName $resourceGroup -Name $vmname -Force
-
-# Get the VM configuration
-$VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName
-
-# Encrypt the OS disk
-$DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.OsDisk.Name
-
-# Encrypt the Data Disks
-for($i=0;$i -lt $VM.StorageProfile.DataDisks.Count;$i++)
+#------------------- Phase 1: Get KeyVault and the Key, Create Disk Encryption Set and  ----------------------------------------------
+#Get the Key Vault
+Try
 {
-    $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.DataDisks[$i].Name
-    write-host "Data Disk Encryption: " $i  
+    $KeyVault=Get-AzKeyVault -VaultName $KeyVaultName -ErrorAction Stop 
+
+    #Get the key for disk encryption
+    $key=Get-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -ErrorAction Stop
+
+    #Create a new DiskEcnryptionSet
+    $config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned' -ErrorAction Stop
+    $diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -DiskEncryptionSet $config -ErrorAction Stop
+
+    #Give access to the Azure Key Vault
+    Set-AzKeyVaultAccessPolicy -VaultName $keyVaultName -ObjectId $diskEncryptionSet.Identity.PrincipalId -PermissionsToKeys wrapkey,unwrapkey,get -ErrorAction Stop
+    New-AzRoleAssignment -ResourceName $keyVaultName -ResourceGroupName $ResourceGroup -ResourceType "Microsoft.KeyVault/vaults" -ObjectId $diskEncryptionSet.Identity.PrincipalId -RoleDefinitionName "Reader" -ErrorAction SilentlyContinue
+}
+Catch
+{
+  $ErrorMessage = $_.Exception.Message
+  $FailedItem = $_.Exception.ItemName
+  Write-Host "Error. Please review your inputs"
+  Write-Host "Error details: $ErrorMessage"
+  Break
+}
+
+#---------------- Phase 2: Disk Encryption ----------------------------------------------------------------------------------------------------------------------
+
+Try
+{
+    # Stop the VM
+    Stop-AzVM -ResourceGroupName $resourceGroup -Name $vmname -Force
+
+    # Get the VM configuration
+    $VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName -ErrorAction Stop
+
+    # Encrypt the OS disk
+    $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
+
+    # Encrypt the Data Disks
+    for($i=0;$i -lt $VM.StorageProfile.DataDisks.Count;$i++)
+    {
+        $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.DataDisks[$i].Name -ErrorAction Stop
+        write-host "Data Disk Encryption: " $i  
+    }
+  }
+  Catch
+{
+  $ErrorMessage = $_.Exception.Message
+  $FailedItem = $_.Exception.ItemName
+  Write-Host "Error. Please review your inputs"
+  Write-Host "Error details: $ErrorMessage"
+  Break
 }
 
 write-host "Starting the VM..."  
