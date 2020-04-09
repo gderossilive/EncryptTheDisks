@@ -52,7 +52,7 @@ $location = "westeurope"
 
 Try
 {
-  Write-Color -Text "Connecting to SubscriptioID: ", $SubscriptionID," ..." -Color White, Yellow, White
+  Write-Host "Connecting to SubscriptioID: ", $SubscriptionID," ..."
   $connect=Connect-AzAccount
   $context = Get-AzSubscription -SubscriptionId $SubscriptionID -ErrorAction Stop
   $setContext=Set-AzContext $context -ErrorAction Stop 
@@ -72,17 +72,17 @@ Catch
 Try
 {
   #Get the Key Vault and the key for disk encryption
-  Write-Color -Text "Connecting to Azure Key Vault ", $KeyVaultName," and getting the key ",$KeyName  -Color White, Yellow, White, Yellow
+  Write-Host "Connecting to Azure Key Vault ", $KeyVaultName," and getting the key ",$KeyName
   #Write-Host "Connecting to Azure Key Vault $KeyVaultName and getting the key $KeyName ..."
   $KeyVault=Get-AzKeyVault -VaultName $KeyVaultName -ErrorAction Stop 
   $key=Get-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -ErrorAction Stop
     
   #Get the DiskEcnryptionSet
-  Write-Color -Text "Getting DiskEncryptionSet ", $DiskEncryptionSetName," ..." -Color White, Yellow, White
+  Write-Host "Getting DiskEncryptionSet ", $DiskEncryptionSetName," ..." 
   $diskEncryptionSet=Get-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -ErrorAction Stop
 
   #Give access to the Azure Key Vault
-  Write-Color -Text "Giving you required access to the KeyVault ..." -Color White
+  Write-Host "Giving you required access to the KeyVault ..."
   #Write-Host "Giving you required access to the KeyVault ..."
   Set-AzKeyVaultAccessPolicy -VaultName $keyVaultName -ObjectId $diskEncryptionSet.Identity.PrincipalId -PermissionsToKeys wrapkey,unwrapkey,get -ErrorAction SilentlyContinue
   New-AzRoleAssignment -ResourceName $keyVaultName -ResourceGroupName $ResourceGroup -ResourceType "Microsoft.KeyVault/vaults" -ObjectId $diskEncryptionSet.Identity.PrincipalId -RoleDefinitionName "Reader" -ErrorAction SilentlyContinue
@@ -101,7 +101,7 @@ Catch
 Try
 {
    # Stop the VM
-   Write-Color -Text "Stopping ", $vmname," ..." -Color White, Yellow, White
+   Write-Host "Stopping ", $vmname," ..."
    #Write-Host "Stopping $vmname ..."
    Stop-AzVM -ResourceGroupName $resourceGroup -Name $vmname -Force
 
@@ -109,7 +109,7 @@ Try
    $VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName -ErrorAction Stop
 
    # Encrypt the OS disk
-   Write-Color -Text "Encrypting OS Disk ..." -Color White
+   Write-Host "Encrypting OS Disk ..." 
    #Write-Host "Encrypting OS Disk ..."
    $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
 
