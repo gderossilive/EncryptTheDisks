@@ -80,6 +80,10 @@ $KeyVault=New-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGr
 #Create a new key for disk encryption
 $key=Add-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -Destination 'Software'
 
+#Write-Host "Creating DiskEncryptionSet $DiskEncryptionSetName ..."
+$config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned' 
+$diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -DiskEncryptionSet $config
+
 Write-Host "Type EncryptTheDisks -SubscriptionID $SubscriptionID -ResourceGroup $resourcegroup -vmName $vmName -DiskEncryptionSetName $DiskEncryptionSetName -KeyVaultName $KeyVaultName -KeyName $KeyName"
 
 

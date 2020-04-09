@@ -60,11 +60,11 @@ Try
 }
 Catch
 {
-    $ErrorMessage = $_.Exception.Message
-    $FailedItem = $_.Exception.ItemName
-    Write-Host "Error. Please review your inputs"
-    Write-Host "Error details: $ErrorMessage"
-    Break
+  $ErrorMessage = $_.Exception.Message
+  $FailedItem = $_.Exception.ItemName
+  Write-Host "Error. Please review your inputs"
+  Write-Host "Error details: $ErrorMessage"
+  Break
 }
 
 #------------------- Phase 1: Get KeyVault and the Key, Create Disk Encryption Set and  ----------------------------------------------
@@ -77,16 +77,14 @@ Try
   $KeyVault=Get-AzKeyVault -VaultName $KeyVaultName -ErrorAction Stop 
   $key=Get-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -ErrorAction Stop
     
-  #Create a new DiskEcnryptionSet
-  Write-Color -Text "Creating DiskEncryptionSet ", $DiskEncryptionSetName," ..." -Color White, Yellow, White
-  #Write-Host "Creating DiskEncryptionSet $DiskEncryptionSetName ..."
-  $config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned' -ErrorAction Stop
-  $diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -DiskEncryptionSet $config -ErrorAction Stop
+  #Get the DiskEcnryptionSet
+  Write-Color -Text "Getting DiskEncryptionSet ", $DiskEncryptionSetName," ..." -Color White, Yellow, White
+  $diskEncryptionSet=Get-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -ErrorAction Stop
 
   #Give access to the Azure Key Vault
   Write-Color -Text "Giving you required access to the KeyVault ..." -Color White
   #Write-Host "Giving you required access to the KeyVault ..."
-  Set-AzKeyVaultAccessPolicy -VaultName $keyVaultName -ObjectId $diskEncryptionSet.Identity.PrincipalId -PermissionsToKeys wrapkey,unwrapkey,get -ErrorAction Stop
+  Set-AzKeyVaultAccessPolicy -VaultName $keyVaultName -ObjectId $diskEncryptionSet.Identity.PrincipalId -PermissionsToKeys wrapkey,unwrapkey,get -ErrorAction SilentlyContinue
   New-AzRoleAssignment -ResourceName $keyVaultName -ResourceGroupName $ResourceGroup -ResourceType "Microsoft.KeyVault/vaults" -ObjectId $diskEncryptionSet.Identity.PrincipalId -RoleDefinitionName "Reader" -ErrorAction SilentlyContinue
 }
 Catch
