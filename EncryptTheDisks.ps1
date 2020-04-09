@@ -52,9 +52,11 @@ $location = "westeurope"
 
 Try
 {
-    Connect-AzAccount
-    $context = Get-AzSubscription -SubscriptionId $SubscriptionID -ErrorAction Stop
-    Set-AzContext $context -ErrorAction Stop 
+  Write-Color -Text "Connecting to SubscriptioID: ", $SubscriptionID," ..." -Color White, Yellow, White
+  $connect=Connect-AzAccount
+  $context = Get-AzSubscription -SubscriptionId $SubscriptionID -ErrorAction Stop
+  $setContext=Set-AzContext $context -ErrorAction Stop 
+    
 }
 Catch
 {
@@ -66,64 +68,74 @@ Catch
 }
 
 #------------------- Phase 1: Get KeyVault and the Key, Create Disk Encryption Set and  ----------------------------------------------
-#Get the Key Vault
+
 Try
 {
-    $KeyVault=Get-AzKeyVault -VaultName $KeyVaultName -ErrorAction Stop 
+  #Get the Key Vault and the key for disk encryption
+  Write-Color -Text "Connecting to Azure Key Vault ", $KeyVaultName," and getting the key ",$KeyName  -Color White, Yellow, White, Yellow
+  #Write-Host "Connecting to Azure Key Vault $KeyVaultName and getting the key $KeyName ..."
+  $KeyVault=Get-AzKeyVault -VaultName $KeyVaultName -ErrorAction Stop 
+  $key=Get-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -ErrorAction Stop
+    
+  #Create a new DiskEcnryptionSet
+  Write-Color -Text "Creating DiskEncryptionSet ", $DiskEncryptionSetName," ..." -Color White, Yellow, White
+  #Write-Host "Creating DiskEncryptionSet $DiskEncryptionSetName ..."
+  $config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned' -ErrorAction Stop
+  $diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -DiskEncryptionSet $config -ErrorAction Stop
 
-    #Get the key for disk encryption
-    $key=Get-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -ErrorAction Stop
-
-    #Create a new DiskEcnryptionSet
-    $config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned' -ErrorAction Stop
-    $diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -DiskEncryptionSet $config -ErrorAction Stop
-
-    #Give access to the Azure Key Vault
-    Set-AzKeyVaultAccessPolicy -VaultName $keyVaultName -ObjectId $diskEncryptionSet.Identity.PrincipalId -PermissionsToKeys wrapkey,unwrapkey,get -ErrorAction Stop
-    New-AzRoleAssignment -ResourceName $keyVaultName -ResourceGroupName $ResourceGroup -ResourceType "Microsoft.KeyVault/vaults" -ObjectId $diskEncryptionSet.Identity.PrincipalId -RoleDefinitionName "Reader" -ErrorAction SilentlyContinue
+  #Give access to the Azure Key Vault
+  Write-Color -Text "Giving you required access to the KeyVault ..." -Color White
+  #Write-Host "Giving you required access to the KeyVault ..."
+  Set-AzKeyVaultAccessPolicy -VaultName $keyVaultName -ObjectId $diskEncryptionSet.Identity.PrincipalId -PermissionsToKeys wrapkey,unwrapkey,get -ErrorAction Stop
+  New-AzRoleAssignment -ResourceName $keyVaultName -ResourceGroupName $ResourceGroup -ResourceType "Microsoft.KeyVault/vaults" -ObjectId $diskEncryptionSet.Identity.PrincipalId -RoleDefinitionName "Reader" -ErrorAction SilentlyContinue
 }
 Catch
 {
-  $ErrorMessage = $_.Exception.Message
-  $FailedItem = $_.Exception.ItemName
-  Write-Host "Error. Please review your inputs"
-  Write-Host "Error details: $ErrorMessage"
-  Break
+    $ErrorMessage = $_.Exception.Message
+    $FailedItem = $_.Exception.ItemName
+    Write-Host "Error. Please review your inputs"
+    Write-Host "Error details: $ErrorMessage"
+    Break
 }
 
 #---------------- Phase 2: Disk Encryption ----------------------------------------------------------------------------------------------------------------------
 
 Try
 {
-    # Stop the VM
-    Stop-AzVM -ResourceGroupName $resourceGroup -Name $vmname -Force
+   # Stop the VM
+   Write-Color -Text "Stopping ", $vmname," ..." -Color White, Yellow, White
+   #Write-Host "Stopping $vmname ..."
+   Stop-AzVM -ResourceGroupName $resourceGroup -Name $vmname -Force
 
-    # Get the VM configuration
-    $VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName -ErrorAction Stop
+   # Get the VM configuration
+   $VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName -ErrorAction Stop
 
-    # Encrypt the OS disk
-    $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
+   # Encrypt the OS disk
+   Write-Color -Text "Encrypting OS Disk ..." -Color White
+   #Write-Host "Encrypting OS Disk ..."
+   $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
 
-    # Encrypt the Data Disks
-    for($i=0;$i -lt $VM.StorageProfile.DataDisks.Count;$i++)
-    {
-        $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.DataDisks[$i].Name -ErrorAction Stop
-        write-host "Data Disk Encryption: " $i  
-    }
-  }
+   # Encrypt the Data Disks
+   for($i=0;$i -lt $VM.StorageProfile.DataDisks.Count;$i++)
+   {
+      Write-host "Encrypting Data Disk $VM.StorageProfile.DataDisks[$i].Name ..."
+      $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.DataDisks[$i].Name -ErrorAction Stop
+        
+   }
+ }
   Catch
 {
-  $ErrorMessage = $_.Exception.Message
-  $FailedItem = $_.Exception.ItemName
-  Write-Host "Error. Please review your inputs"
-  Write-Host "Error details: $ErrorMessage"
-  Break
+   $ErrorMessage = $_.Exception.Message
+   $FailedItem = $_.Exception.ItemName
+   Write-Host "Error. Please review your inputs"
+   Write-Host "Error details: $ErrorMessage"
+   Break
 }
 
-write-host "Starting the VM..."  
+ 
 
 # Re-Star the VM
+write-host "Starting the VM $vmname ..." 
 Start-AzVM -ResourceGroupName $resourceGroup -Name $vmname
-
 write-host "VM Started" 
 
