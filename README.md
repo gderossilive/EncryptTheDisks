@@ -19,3 +19,13 @@ The script takes in input the following parameters
 * `DiskEncryptionSetName`: The name of the existing Disk Encryption Set where the CMK is used
 
 ## Get started
+If you need to setup a test-bed for the EncryptTheDisks script, you could use the `CreateDummyVM` script. This script create
+* 1 Linux VM
+* 1 Azure KeyVault
+* 1 Key in the above Azure Key Vault that will be used to encrypt the disks
+* 1 Azure Disk Encryption Set
+
+To launch the CreateDummyVM script you need to input 
+> *./CreateDummyVM -SubscriptionID <11111111-2222-3333-4444-555555555555>*
+
+
