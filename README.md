@@ -10,9 +10,9 @@ The script expects the following object:
 
 ## Get Started
 The script taks in input the following parameters:
-- SubscriptionID: 
-- ResourceGroup:
-- vmName:
-- DiskEncryptionSetName:
-- KeyVaultName:
-- KeyName:
+- 'SubscriptionID': 
+- 'ResourceGroup':
+- 'vmName':
+- 'DiskEncryptionSetName':
+- 'KeyVaultName':
+- 'KeyName':
