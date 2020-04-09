@@ -89,45 +89,45 @@ Try
 }
 Catch
 {
-    $ErrorMessage = $_.Exception.Message
-    $FailedItem = $_.Exception.ItemName
-    Write-Host "Error. Please review your inputs"
-    Write-Host "Error details: $ErrorMessage"
-    Break
+  $ErrorMessage = $_.Exception.Message
+  $FailedItem = $_.Exception.ItemName
+  Write-Host "Error. Please review your inputs"
+  Write-Host "Error details: $ErrorMessage"
+  Break
 }
 
 #---------------- Phase 2: Disk Encryption ----------------------------------------------------------------------------------------------------------------------
 
 Try
 {
-   # Stop the VM
-   Write-Host "Stopping ", $vmname," ..."
-   #Write-Host "Stopping $vmname ..."
-   Stop-AzVM -ResourceGroupName $resourceGroup -Name $vmname -Force
+  # Stop the VM
+  Write-Host "Stopping ", $vmname," ..."
+  #Write-Host "Stopping $vmname ..."
+  Stop-AzVM -ResourceGroupName $resourceGroup -Name $vmname -Force
 
-   # Get the VM configuration
-   $VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName -ErrorAction Stop
+  # Get the VM configuration
+  $VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName -ErrorAction Stop
 
-   # Encrypt the OS disk
-   Write-Host "Encrypting OS Disk ..." 
-   #Write-Host "Encrypting OS Disk ..."
-   $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
+  # Encrypt the OS disk
+  Write-Host "Encrypting OS Disk ..." 
+  #Write-Host "Encrypting OS Disk ..."
+  $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
 
-   # Encrypt the Data Disks
-   for($i=0;$i -lt $VM.StorageProfile.DataDisks.Count;$i++)
-   {
-      Write-host "Encrypting Data Disk $VM.StorageProfile.DataDisks[$i].Name ..."
-      $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.DataDisks[$i].Name -ErrorAction Stop
+  # Encrypt the Data Disks
+  for($i=0;$i -lt $VM.StorageProfile.DataDisks.Count;$i++)
+  {
+    Write-host "Encrypting Data Disk ",$VM.StorageProfile.DataDisks[$i].Name," ..."
+    $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.DataDisks[$i].Name -ErrorAction Stop
         
-   }
+  }
  }
   Catch
 {
-   $ErrorMessage = $_.Exception.Message
-   $FailedItem = $_.Exception.ItemName
-   Write-Host "Error. Please review your inputs"
-   Write-Host "Error details: $ErrorMessage"
-   Break
+  $ErrorMessage = $_.Exception.Message
+  $FailedItem = $_.Exception.ItemName
+  Write-Host "Error. Please review your inputs"
+  Write-Host "Error details: $ErrorMessage"
+  Break
 }
 
  
