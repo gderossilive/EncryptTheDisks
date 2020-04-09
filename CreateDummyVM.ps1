@@ -56,7 +56,7 @@ $nic = New-AzNetworkInterface -Name myNic -ResourceGroupName $resourceGroup -Loc
 
 # Create a virtual machine configuration
 $vmConfig = New-AzVMConfig -VMName $vmName -VMSize Standard_B8ms
-$OsDisk=Set-AzVMOperatingSystem -VM $vmconfig -Windows -ComputerName $vmName -Credential $cred -
+$OsDisk=Set-AzVMOperatingSystem -VM $vmconfig -Linux -ComputerName $vmName -Credential $cred -
 $n=Get-Random -Maximum 5
 $i=0
 do{
@@ -64,8 +64,7 @@ do{
     #$i
     $i++
 } While ($n -gt $i)
-$VmSourceImage=Set-AzVMSourceImage -VM $vmConfig -PublisherName MicrosoftWindowsServer -Offer WindowsServer `
-    -Skus 2016-Datacenter -Version latest | Add-AzVMNetworkInterface -Id $nic.Id
+$VmSourceImage=Set-AzVMSourceImage -VM $vmConfig -PublisherName Canonical -Offer UbuntuServer -Skus 14.04.2-LTS -Version latest | Add-AzVMNetworkInterface -Id $nic.Id
 
 
 # Create a virtual machine
