@@ -26,6 +26,6 @@ If you need to setup a test-bed for the EncryptTheDisks script, you could use th
 * 1 Azure Disk Encryption Set
 
 To launch the CreateDummyVM script you need to input 
-> *./CreateDummyVM -SubscriptionID <11111111-2222-3333-4444-555555555555>*
+> PS >*./CreateDummyVM -SubscriptionID <11111111-2222-3333-4444-555555555555>*
 
 
