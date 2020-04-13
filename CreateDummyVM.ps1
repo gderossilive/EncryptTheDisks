@@ -19,14 +19,14 @@ param (
 )
 
 Connect-AzAccount
-
+gdr
 $context = Get-AzSubscription -SubscriptionId $SubscriptionID
 Set-AzContext $context
 
 $seed=(Get-Random)
 
 # Variables for common values
-$resourceGroup = "PCLRG$seed"
+$resourceGroupName = "PCLRG$seed"
 $location = "westeurope"
 $vmName = "PCLVM$seed"
 $DiskEncryptionSetName="PCLDiskEncryptionSet$seed"
@@ -34,7 +34,7 @@ $KeyVaultName="PCLKeyVault$seed"
 $KeyName="Key$seed"
 $ServicePrincipalName="PCLSP$seed"
 
-New-AzResourceGroup -Name $resourceGroup -Location $location
+New-AzResourceGroup -Name $resourceGroupName -Location $location
 
 # Create user object
 $cred = Get-Credential -Message "Enter a username and password for the virtual machine."
@@ -43,15 +43,15 @@ $cred = Get-Credential -Message "Enter a username and password for the virtual m
 $subnetConfig = New-AzVirtualNetworkSubnetConfig -Name mySubnet -AddressPrefix 192.168.1.0/24
 
 # Create a virtual network
-$vnet = New-AzVirtualNetwork -ResourceGroupName $resourceGroup -Location $location `
+$vnet = New-AzVirtualNetwork -ResourceGroupName $resourceGroupName -Location $location `
   -Name MYvNET -AddressPrefix 192.168.0.0/16 -Subnet $subnetConfig
 
 # Create a public IP address and specify a DNS name
-$pip = New-AzPublicIpAddress -ResourceGroupName $resourceGroup -Location $location `
+$pip = New-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Location $location `
   -Name "mypublicdns$(Get-Random)" -AllocationMethod Static -IdleTimeoutInMinutes 4
 
 # Create a virtual network card and associate with public IP address
-$nic = New-AzNetworkInterface -Name myNic -ResourceGroupName $resourceGroup -Location $location `
+$nic = New-AzNetworkInterface -Name myNic -ResourceGroupName $resourceGroupName -Location $location `
   -SubnetId $vnet.Subnets[0].Id -PublicIpAddressId $pip.Id
 
 # Create a virtual machine configuration
@@ -68,21 +68,21 @@ $VmSourceImage=Set-AzVMSourceImage -VM $vmConfig -PublisherName Canonical -Offer
 
 
 # Create a virtual machine
-$VM=New-AzVM -ResourceGroupName $resourceGroup -Location $location -VM $vmConfig
+$VM=New-AzVM -ResourceGroupName $resourceGroupName -Location $location -VM $vmConfig
 
 Write-host "Your public IP address is $($pip.IpAddress)"
 
 #------------------- Phase 2: Create KeyVault, Disk Encryption Set and Service Principal giving access to the AKV ----------------------------------------------
 #Create a New Key Vault
-$KeyVault=New-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGroup -Location $location -EnableSoftDelete -EnablePurgeProtection
+$KeyVault=New-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $ResourceGroupName -Location $location -EnableSoftDelete -EnablePurgeProtection
 
 #Create a new key for disk encryption
 $key=Add-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -Destination 'Software'
 
 #Write-Host "Creating DiskEncryptionSet $DiskEncryptionSetName ..."
 $config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned' 
-$diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -DiskEncryptionSet $config
+$diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroupName -Name $DiskEncryptionSetName -DiskEncryptionSet $config
 
-Write-Host "Type EncryptTheDisks -SubscriptionID $SubscriptionID -ResourceGroup $resourcegroup -vmName $vmName -DiskEncryptionSetName $DiskEncryptionSetName -KeyVaultName $KeyVaultName -KeyName $KeyName"
+Write-Host "Type EncryptTheDisks -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroupName -vmName $vmName -DiskEncryptionSetName $DiskEncryptionSetName -KeyVaultName $KeyVaultName -KeyName $KeyName"
 
 

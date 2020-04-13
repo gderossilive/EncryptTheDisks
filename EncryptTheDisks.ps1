@@ -33,7 +33,7 @@ param (
     $SubscriptionID,
     [Parameter(Mandatory=$True)]
     [String]
-    $ResourceGroup,   
+    $ResourceGroupName,   
     [Parameter(Mandatory=$True)]
     [String]
     $vmName,  
@@ -79,13 +79,13 @@ Try
     
   #Get the DiskEcnryptionSet
   Write-Host "Getting DiskEncryptionSet ", $DiskEncryptionSetName," ..." 
-  $diskEncryptionSet=Get-AzDiskEncryptionSet -ResourceGroupName $resourceGroup -Name $DiskEncryptionSetName -ErrorAction Stop
+  $diskEncryptionSet=Get-AzDiskEncryptionSet -ResourceGroupName $resourceGroupName -Name $DiskEncryptionSetName -ErrorAction Stop
 
   #Give access to the Azure Key Vault
   Write-Host "Giving you required access to the KeyVault ..."
   #Write-Host "Giving you required access to the KeyVault ..."
   Set-AzKeyVaultAccessPolicy -VaultName $keyVaultName -ObjectId $diskEncryptionSet.Identity.PrincipalId -PermissionsToKeys wrapkey,unwrapkey,get -ErrorAction SilentlyContinue
-  New-AzRoleAssignment -ResourceName $keyVaultName -ResourceGroupName $ResourceGroup -ResourceType "Microsoft.KeyVault/vaults" -ObjectId $diskEncryptionSet.Identity.PrincipalId -RoleDefinitionName "Reader" -ErrorAction SilentlyContinue
+  New-AzRoleAssignment -ResourceName $keyVaultName -ResourceGroupName $ResourceGroupName -ResourceType "Microsoft.KeyVault/vaults" -ObjectId $diskEncryptionSet.Identity.PrincipalId -RoleDefinitionName "Reader" -ErrorAction SilentlyContinue
 }
 Catch
 {
@@ -103,21 +103,21 @@ Try
   # Stop the VM
   Write-Host "Stopping ", $vmname," ..."
   #Write-Host "Stopping $vmname ..."
-  Stop-AzVM -ResourceGroupName $resourceGroup -Name $vmname -Force
+  Stop-AzVM -ResourceGroupName $resourceGroupName -Name $vmname -Force
 
   # Get the VM configuration
-  $VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName -ErrorAction Stop
+  $VM=Get-AzVM -ResourceGroupName $ResourceGroupName -VM $vmName -ErrorAction Stop
 
   # Encrypt the OS disk
   Write-Host "Encrypting OS Disk ..." 
   #Write-Host "Encrypting OS Disk ..."
-  $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
+  $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
 
   # Encrypt the Data Disks
   for($i=0;$i -lt $VM.StorageProfile.DataDisks.Count;$i++)
   {
     Write-host "Encrypting Data Disk ",$VM.StorageProfile.DataDisks[$i].Name," ..."
-    $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroup -DiskName $VM.StorageProfile.DataDisks[$i].Name -ErrorAction Stop
+    $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $VM.StorageProfile.DataDisks[$i].Name -ErrorAction Stop
         
   }
  }
@@ -134,6 +134,6 @@ Try
 
 # Re-Star the VM
 write-host "Starting the VM $vmname ..." 
-Start-AzVM -ResourceGroupName $resourceGroup -Name $vmname
+Start-AzVM -ResourceGroupName $resourceGroupName -Name $vmname
 write-host "VM Started" 
 
