@@ -5,7 +5,7 @@ param (
     $SubscriptionID,
     [Parameter(Mandatory=$True)]
     [String]
-    $ResourceGroup,   
+    $ResourceGroupName,   
     [Parameter(Mandatory=$True)]
     [String]
     $vmName 
@@ -32,7 +32,7 @@ Catch
 
 
 # Get the VM configuration
-$VM=Get-AzVM -ResourceGroupName $ResourceGroup -VM $vmName -ErrorAction Stop
+$VM=Get-AzVM -ResourceGroupName $ResourceGroupName -VM $vmName -ErrorAction Stop
 
 # Checking encryption status for OS Disk
 $disk=Get-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $VM.StorageProfile.OsDisk.Name
