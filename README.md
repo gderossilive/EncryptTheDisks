@@ -19,7 +19,8 @@ Lo script prende in imput i seguenti parametri
 * `DiskEncryptionSetName`: Il nome del Disk Encryption Set che utilizza la Chiave (CMK)
 
 ## Get started
-Nel caso servisse creare una ambiente di test dove lanciare `EncryptTheDisk`, si può utilizzare lo script `CreateDummyVM`. `CreateDummyVM` crea:
+### (Optional) Crea un ambiente di test
+Per creare una ambiente di test dove lanciare `EncryptTheDisk`, si può utilizzare lo script `CreateDummyVM`. `CreateDummyVM` crea:
 * 1 VM Linux
 * 1 Azure KeyVault
 * 1 Key nell'Azure Key Vault che verrà utilizzata per crittografare i dischi della VM e che simula la CMK
@@ -27,3 +28,6 @@ Nel caso servisse creare una ambiente di test dove lanciare `EncryptTheDisk`, si
 
 Per lanciare lo script `CreateDummyVM`, basta digitare il comando seguente 
 > PS >*./CreateDummyVM -SubscriptionID <11111111-2222-3333-4444-555555555555>*
+
+### (Optional) Verifica lo stato di crittografia dei dischi
+Per verificare lo stato attuale della crittografia dei dischi, basta lanciare lo script `CheckDisksEncryption`. Questo script prende in input

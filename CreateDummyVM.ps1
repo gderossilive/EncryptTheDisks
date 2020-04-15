@@ -13,13 +13,13 @@
 #>
 [CmdletBinding()]
 param ( 
-    [Parameter()]
+    [Parameter(Mandatory=$True)]
     [String]
     $SubscriptionID
 )
 
 Connect-AzAccount
-gdr
+
 $context = Get-AzSubscription -SubscriptionId $SubscriptionID
 Set-AzContext $context
 
@@ -83,6 +83,7 @@ $key=Add-AzKeyVaultKey -VaultName $KeyVault.VaultName -Name $KeyName -Destinatio
 $config = New-AzDiskEncryptionSetConfig -Location $location -KeyUrl $key.Id -SourceVaultId $KeyVault.ResourceId -IdentityType 'SystemAssigned' 
 $diskEncryptionSet=New-AzDiskEncryptionSet -ResourceGroupName $resourceGroupName -Name $DiskEncryptionSetName -DiskEncryptionSet $config
 
-Write-Host "Type EncryptTheDisks -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroupName -vmName $vmName -DiskEncryptionSetName $DiskEncryptionSetName -KeyVaultName $KeyVaultName -KeyName $KeyName"
+Write-Host "To check the actual ecryption configuration, please run ./CheckDisksEncryption -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroupName -vmName $vmName"
+Write-Host "To encrytp the VM's disk, please type ./EncryptTheDisks -SubscriptionID $SubscriptionID -ResourceGroup $ResourceGroupName -vmName $vmName -DiskEncryptionSetName $DiskEncryptionSetName -KeyVaultName $KeyVaultName -KeyName $KeyName"
 
 

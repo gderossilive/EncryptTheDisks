@@ -109,14 +109,14 @@ Try
   $VM=Get-AzVM -ResourceGroupName $ResourceGroupName -VM $vmName -ErrorAction Stop
 
   # Encrypt the OS disk
-  Write-Host "Encrypting OS Disk ..." 
+  Write-Host -ForegroundColor Green "Encrypting OS Disk ..." 
   #Write-Host "Encrypting OS Disk ..."
   $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $VM.StorageProfile.OsDisk.Name -ErrorAction Stop
 
   # Encrypt the Data Disks
   for($i=0;$i -lt $VM.StorageProfile.DataDisks.Count;$i++)
   {
-    Write-host "Encrypting Data Disk ",$VM.StorageProfile.DataDisks[$i].Name," ..."
+    Write-host -ForegroundColor Green "Encrypting Data Disk ",$VM.StorageProfile.DataDisks[$i].Name," ..."
     $DiskConf=New-AzDiskUpdateConfig -EncryptionType "EncryptionAtRestWithCustomerKey" -DiskEncryptionSetId $diskEncryptionSet.Id | Update-AzDisk -ResourceGroupName $ResourceGroupName -DiskName $VM.StorageProfile.DataDisks[$i].Name -ErrorAction Stop
         
   }
