@@ -9,9 +9,9 @@ Nel  caso in cui l'utente voglia utilizzare una propria chiave (CMK) questa può
 * Generata dall'utente all'interno di un Azure Key Vault sotto il suo controllo
 * Generata dall'utente all'interno di un HSM nel suo datacenter e poi importata all'interno dell'Azure Key Vault sotto il suo controllo
 
-Questa chiave (asimmetrica) generata dall'utente viene quindi utilizzata per crittografare una chiave simmetrica (AES based Data Encryption Key) con la tecnica dell'[envelop encryption] (<https://docs.microsoft.com/en-us/azure/storage/common/storage-client-side-encryption#encryption-and-decryption-via-the-envelope-technique>) ed utilizzata dagli Azure Managed Disk per gestire la crittografia dei dischi in modalità completamente trasparente.
+Questa chiave (asimmetrica) generata dall'utente viene quindi utilizzata per crittografare una chiave simmetrica (Data Encryption Key) con la tecnica dell'[envelop encryption](<https://docs.microsoft.com/en-us/azure/storage/common/storage-client-side-encryption#encryption-and-decryption-via-the-envelope-technique>) ed utilizzata dagli Azure Managed Disk per gestire la crittografia dei dischi in modalità completamente trasparente.
 
-E' necessario perciò concedere l'accesso all'Azure Key Vault che contiene la Chiave dell'utente da parte dei Managed Disks. Questo consente all'utente di revocare in ogni momento l'accesso ai dati da parte dei Managed Disks.
+E' necessario perciò concedere ai Managed Disks Resource Provider l'accesso all'Azure Key Vault che contiene la Chiave dell'utente. Questo consente all'utente di revocare in ogni momento l'accesso ai propri dati da parte del Managed Disks Resource Provider.
 
 Lo script powershell `EncryptTheDisk` è pensato per crittografare tutti i dischi (OS+Data) per una virtual machine esistente.
 
