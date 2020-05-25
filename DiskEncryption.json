@@ -1,0 +1,40 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+        "allOf": [{
+                "field": "type",
+                "equals": "microsoft.compute/disks"
+            },
+            {
+                "anyOf": [{
+                        "field": "Microsoft.Compute/disks/encryption.type",
+                        "notEquals": "EncryptionAtRestWithCustomerKey"
+                    },
+                    {
+                        "field": "Microsoft.Compute/disks/properties.encryptionSettingsCollection.enabled",
+                        "notEquals": "True"
+                    }
+                ]
+            }
+        ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]"
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy"
+      },
+      "allowedValues": [
+        "Audit",
+        "Disabled"
+      ],
+      "defaultValue": "Audit"
+    }
+  }
+}
